@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { ingestSpan } from "../../../lib/telemetry";
+import { formatItemLine } from "../../../lib/format";
 
 // Heavy endpoint — simulates a daily report build (~2.5s of blocking work)
 // on the request path, before the response is sent.
@@ -21,11 +22,13 @@ export async function POST(req: Request) {
   try {
     // Simulated report build: aggregation + formatting across items.
     let total = 0;
+    const lines: string[] = [];
     for (const item of items) {
       total += item.qty ?? 0;
+      lines.push(formatItemLine(item));
       await new Promise((resolve) => setTimeout(resolve, 220));
     }
-    summary = `${items.length} line items, ${total} units total`;
+    summary = `${items.length} line items (${lines.length} formatted), ${total} units total`;
   } catch (err) {
     const message = err instanceof Error ? err.message : "report build failed";
     const ms = Date.now() - t0;
