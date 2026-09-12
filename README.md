@@ -14,3 +14,5 @@ Open [http://localhost:3000](http://localhost:3000). Type a charge, click **Fire
 Production traffic is ingested live against the git SHA Vercel deployed.
 
 Kept after the error-spike rehearsal.
+
+Kiln drafts now use a larger model by default.
