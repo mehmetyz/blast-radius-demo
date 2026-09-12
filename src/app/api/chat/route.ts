@@ -62,7 +62,9 @@ export async function POST(req: Request) {
 
   const tLlm = Date.now();
   const orderNo = Number((/Order #(\d+)/i.exec(prompt) ?? [])[1]);
-  const failClosed = Number.isFinite(orderNo) && orderNo % 4 === 0; // every fourth kiln order → 502
+  const failClosed =
+    (Number.isFinite(orderNo) && orderNo % 4 === 0) ||
+    prompt.toLowerCase().includes("refund"); // 502 on every 4th order or any refund draft
   try {
     if (failClosed) {
       throw new Error("kiln upstream timeout");
