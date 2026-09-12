@@ -68,7 +68,14 @@ export async function POST(req: Request) {
       messages: [
         {
           role: "system",
-          content: "You write short customer-support replies. Be concrete. No preamble.",
+          content: [
+            "You write short customer-support replies.",
+            "House style:",
+            "- one sentence, no preamble, no emoji",
+            "- concrete dates and numbers over vague promises",
+            "- warm but plain language",
+            "- when the order is flagged, say so plainly and ask the customer to contact billing",
+          ].join("\n"),
         },
         { role: "user", content: prompt },
       ],
