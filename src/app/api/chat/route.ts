@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const MODEL = process.env.LLM_MODEL ?? "openai/gpt-4o-mini";
+const MODEL = "openai/gpt-4o";
 
 async function ingestSpan(body: Record<string, unknown>) {
   const ingestUrl = process.env.INGEST_URL;
@@ -64,10 +64,12 @@ export async function POST(req: Request) {
   try {
     const completion = await client.chat.completions.create({
       model: MODEL,
+      max_tokens: 4096,
       messages: [
         {
           role: "system",
-          content: "You write short customer-support replies. Be concrete. No preamble.",
+          content:
+            "You write customer-support replies. Include shipping policy, warehouse hours, return windows, and a full apology. No preamble.",
         },
         { role: "user", content: prompt },
       ],
