@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-// Rehearsal: gpt-4o — ~12x per output token vs gpt-4o-mini (expected cost regression).
-const MODEL = "openai/gpt-4o";
+const MODEL = process.env.LLM_MODEL ?? "openai/gpt-4o-mini";
 
 async function enrichPrompt(prompt: string): Promise<string> {
   // Simulates a customer-context lookup on the request path — adds ~800ms to the
