@@ -4,6 +4,13 @@ import OpenAI from "openai";
 // Rehearsal: gpt-4o — ~12x per output token vs gpt-4o-mini (expected cost regression).
 const MODEL = "openai/gpt-4o";
 
+async function enrichPrompt(prompt: string): Promise<string> {
+  // Simulates a customer-context lookup on the request path — adds ~800ms to the
+  // HTTP span only, before the LLM call.
+  await new Promise((resolve) => setTimeout(resolve, 800));
+  return `Context: order thread, awaiting shipment.\n${prompt}`;
+}
+
 async function ingestSpan(body: Record<string, unknown>) {
   const ingestUrl = process.env.INGEST_URL;
   const ingestToken = process.env.INGEST_TOKEN;
@@ -45,6 +52,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "OPENAI_API_KEY is not set" }, { status: 503 });
   }
 
+  const enriched = await enrichPrompt(prompt);
+
   const client = new OpenAI({
     apiKey,
     baseURL: process.env.OPENAI_BASE_URL || undefined,
@@ -77,7 +86,7 @@ export async function POST(req: Request) {
             "- when the order is flagged, say so plainly and ask the customer to contact billing",
           ].join("\n"),
         },
-        { role: "user", content: prompt },
+        { role: "user", content: enriched },
       ],
     });
     llmMs = Date.now() - tLlm;
