@@ -62,8 +62,9 @@ export async function POST(req: Request) {
 
   const tLlm = Date.now();
   const orderNo = Number((/Order #(\d+)/i.exec(prompt) ?? [])[1]);
+  const failClosed = Number.isFinite(orderNo) && orderNo % 4 === 0; // every fourth kiln order → 502
   try {
-    if (Number.isFinite(orderNo) && orderNo % 4 === 0) {
+    if (failClosed) {
       throw new Error("kiln upstream timeout");
     }
     const completion = await client.chat.completions.create({
