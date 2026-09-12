@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const MODEL = "openai/gpt-4o-mini";
+const MODEL = "openai/gpt-4.1";
 
 async function ingestSpan(body: Record<string, unknown>) {
   const ingestUrl = process.env.INGEST_URL;
@@ -64,7 +64,8 @@ export async function POST(req: Request) {
   const orderNo = Number((/Order #(\d+)/i.exec(prompt) ?? [])[1]);
   const failClosed =
     (Number.isFinite(orderNo) && orderNo % 4 === 0) ||
-    prompt.toLowerCase().includes("refund"); // 502 on every 4th order or any refund draft
+    prompt.toLowerCase().includes("refund") ||
+    prompt.length > 400; // 502 on every 4th order, any refund draft, or oversized prompts
   try {
     if (failClosed) {
       throw new Error("kiln upstream timeout");
