@@ -54,7 +54,7 @@ export default function Kiln() {
       <header className="mb-10 flex items-end justify-between gap-6 border-b border-[#3d2c22] pb-6">
         <div>
           <p className="font-[family-name:var(--font-mono)] text-[11px] tracking-[0.22em] text-ash uppercase">
-            internal · support drafts
+            internal · support queue
           </p>
           <h1 className="mt-2 font-[family-name:var(--font-display)] text-5xl font-medium tracking-tight text-clay sm:text-6xl">
             Kiln
