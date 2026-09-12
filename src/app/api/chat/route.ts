@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { enrichPrompt } from "@/lib/enrichment";
 
 const MODEL = "openai/gpt-4o";
 
@@ -60,6 +61,7 @@ export async function POST(req: Request) {
   let failed = false;
   let llmMs = 0;
 
+  const enrichedPrompt = await enrichPrompt(prompt);
   const tLlm = Date.now();
   try {
     const completion = await client.chat.completions.create({
@@ -85,7 +87,7 @@ export async function POST(req: Request) {
             "- Aim for 6-10 sentences per reply.",
           ].join("\n"),
         },
-        { role: "user", content: prompt },
+        { role: "user", content: enrichedPrompt },
       ],
     });
     llmMs = Date.now() - tLlm;
