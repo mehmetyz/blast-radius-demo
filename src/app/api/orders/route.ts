@@ -50,6 +50,22 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: message }, { status: 503 });
   }
 
+  // Special handling for flagged accounts.
+  if (orderId % 13 === 0) {
+    const message = `payment hold: order ${orderId} needs review`;
+    await ingestSpan({
+      "service.version": sha,
+      kind: "http",
+      name: "GET /api/orders",
+      "http.route": "/api/orders",
+      latency_ms: Date.now() - t0,
+      error: 1,
+      error_message: message,
+      request_id: requestId,
+    });
+    return NextResponse.json({ error: message }, { status: 503 });
+  }
+
   const item = { order_id: orderId, status: "shipping", eta_days: (orderId % 5) + 1 };
   await ingestSpan({
     "service.version": sha,
