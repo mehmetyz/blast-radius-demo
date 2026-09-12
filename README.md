@@ -9,4 +9,4 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Type a charge, click **Fire**.
 
-`POST /api/chat` `{ "prompt": "..." }` — used by `seed-traffic.js` later. OpenAI is unwired until D1.
+`POST /api/chat` `{ "prompt": "..." }` — real model call, then OTel ingest to Blast Radius (`service.version` = git SHA). Copy `.env.example` to `.env`.

@@ -5,7 +5,9 @@ import { FormEvent, useState } from "react";
 type ChatResponse = {
   reply?: string;
   error?: string;
-  unwired?: boolean;
+  ingest_ok?: boolean;
+  sha?: string;
+  model?: string;
 };
 
 export default function Kiln() {
@@ -33,7 +35,12 @@ export default function Kiln() {
         throw new Error(data.error ?? `request failed (${res.status})`);
       }
       setReply(data.reply ?? "");
-      setStatus(data.unwired ? "unwired — draft held" : "glaze set");
+      const short = data.sha ? data.sha.slice(0, 7) : "";
+      setStatus(
+        data.ingest_ok
+          ? `glaze set · ${short}`
+          : `glaze set · ingest missed${short ? ` · ${short}` : ""}`,
+      );
     } catch (err) {
       setError(err instanceof Error ? err.message : "firing failed");
       setStatus("hearth cold");
