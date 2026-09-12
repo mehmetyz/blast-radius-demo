@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import OpenAI from "openai";
+
+const MODEL = process.env.LLM_MODEL ?? "openai/gpt-4o-mini";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -17,9 +20,82 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "prompt required" }, { status: 400 });
   }
 
-  // D0: OpenAI stays unwired. D1 will replace this with a real completion + ingest.
+  const apiKey = process.env.OPENAI_API_KEY ?? process.env.LLM_API_KEY;
+  if (!apiKey) {
+    return NextResponse.json({ error: "OPENAI_API_KEY is not set" }, { status: 503 });
+  }
+
+  const client = new OpenAI({
+    apiKey,
+    baseURL: process.env.OPENAI_BASE_URL || undefined,
+  });
+
+  const sha = process.env.SERVICE_VERSION ?? "dev";
+  const t0 = Date.now();
+  let reply = "";
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let model = MODEL;
+  let requestId: string | null = null;
+  let failed = false;
+
+  try {
+    const completion = await client.chat.completions.create({
+      model: MODEL,
+      messages: [
+        {
+          role: "system",
+          content: "You write short customer-support replies. Be concrete. No preamble.",
+        },
+        { role: "user", content: prompt },
+      ],
+    });
+    reply = completion.choices[0]?.message?.content ?? "";
+    inputTokens = completion.usage?.prompt_tokens ?? 0;
+    outputTokens = completion.usage?.completion_tokens ?? 0;
+    model = completion.model ?? MODEL;
+    requestId = completion.id ?? null;
+  } catch (err) {
+    failed = true;
+    reply = err instanceof Error ? err.message : "model call failed";
+  }
+
+  const latencyMs = Date.now() - t0;
+  let ingestOk = false;
+  const ingestUrl = process.env.INGEST_URL;
+  const ingestToken = process.env.INGEST_TOKEN;
+  if (ingestUrl && ingestToken) {
+    try {
+      const res = await fetch(ingestUrl, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${ingestToken}`,
+        },
+        body: JSON.stringify({
+          "service.version": sha,
+          "gen_ai.request.model": model,
+          "gen_ai.usage.input_tokens": inputTokens,
+          "gen_ai.usage.output_tokens": outputTokens,
+          latency_ms: latencyMs,
+          error: failed ? 1 : 0,
+          request_id: requestId,
+        }),
+      });
+      ingestOk = res.ok;
+    } catch {
+      ingestOk = false;
+    }
+  }
+
+  if (failed) {
+    return NextResponse.json({ error: reply, ingest_ok: ingestOk, sha }, { status: 502 });
+  }
+
   return NextResponse.json({
-    reply: `Held in the kiln (model unwired).\n\n${prompt}`,
-    unwired: true,
+    reply,
+    model,
+    sha,
+    ingest_ok: ingestOk,
   });
 }
