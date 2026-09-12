@@ -10,3 +10,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000). Type a charge, click **Fire**.
 
 `POST /api/chat` `{ "prompt": "..." }` — real model call, then OTel ingest to Blast Radius (`service.version` = git SHA). Copy `.env.example` to `.env`.
+
+## Scenario G notes
+
+Five-commit rehearsal covering cost, prompt, latency, error, and docs.
