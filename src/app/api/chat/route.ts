@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const MODEL = "openai/gpt-4o";
+const MODEL = "openai/gpt-4o-mini";
 
 async function ingestSpan(body: Record<string, unknown>) {
   const ingestUrl = process.env.INGEST_URL;
