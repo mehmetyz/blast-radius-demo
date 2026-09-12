@@ -5,7 +5,7 @@ import { formatItemLine } from "../../../lib/format";
 // Heavy endpoint — simulates a daily report build (~2.5s of blocking work)
 // on the request path, before the response is sent.
 export async function POST(req: Request) {
-  const sha = process.env.SERVICE_VERSION ?? "dev";
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.SERVICE_VERSION ?? "dev";
   const requestId = crypto.randomUUID();
   const t0 = Date.now();
 

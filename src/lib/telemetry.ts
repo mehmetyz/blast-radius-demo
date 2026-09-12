@@ -19,7 +19,7 @@ export async function ingestSpan(body: Record<string, unknown>) {
 
 export function commonSpan(extra: Record<string, unknown>) {
   return {
-    "service.version": process.env.SERVICE_VERSION ?? "dev",
+    "service.version": process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.SERVICE_VERSION ?? "dev",
     request_id: crypto.randomUUID(),
     ...extra,
   };

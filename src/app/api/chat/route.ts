@@ -32,7 +32,7 @@ export async function POST(req: Request) {
     baseURL: process.env.OPENAI_BASE_URL || undefined,
   });
 
-  const sha = process.env.SERVICE_VERSION ?? "dev";
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.SERVICE_VERSION ?? "dev";
   const requestId = crypto.randomUUID();
   const tReq = Date.now();
   let reply = "";

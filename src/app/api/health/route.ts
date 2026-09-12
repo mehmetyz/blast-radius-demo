@@ -7,7 +7,7 @@ export async function GET(req: Request) {
   const res = NextResponse.json({ ok: true, uptime_s: Math.round(process.uptime()) });
   const latencyMs = Date.now() - t0;
   await ingestSpan({
-    "service.version": process.env.SERVICE_VERSION ?? "dev",
+    "service.version": process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.SERVICE_VERSION ?? "dev",
     kind: "http",
     name: "GET /api/health",
     "http.route": "/api/health",
