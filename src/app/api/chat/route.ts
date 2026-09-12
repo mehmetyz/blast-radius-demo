@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const MODEL = process.env.LLM_MODEL ?? "openai/gpt-4o-mini";
+const MODEL = process.env.LLM_MODEL ?? "openai/gpt-4o";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -42,6 +42,7 @@ export async function POST(req: Request) {
   try {
     const completion = await client.chat.completions.create({
       model: MODEL,
+      max_tokens: 4096,
       messages: [
         {
           role: "system",
