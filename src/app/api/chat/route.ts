@@ -52,6 +52,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "OPENAI_API_KEY is not set" }, { status: 503 });
   }
 
+  // tReq is captured BEFORE the enrich step so the HTTP span includes its delay.
+  const tReq = Date.now();
+
   const enriched = await enrichPrompt(prompt);
 
   const client = new OpenAI({
@@ -61,7 +64,6 @@ export async function POST(req: Request) {
 
   const sha = process.env.SERVICE_VERSION ?? "dev";
   const requestId = crypto.randomUUID();
-  const tReq = Date.now();
   let reply = "";
   let inputTokens = 0;
   let outputTokens = 0;
