@@ -45,6 +45,10 @@ export async function POST(req: Request) {
 
   const tLlm = Date.now();
   try {
+    // Fail closed: escalated prompts short-circuit before the LLM call.
+    if (/escalate/i.test(prompt)) {
+      throw new Error("escalated prompt — fail closed");
+    }
     const completion = await client.chat.completions.create({
       model: MODEL,
       messages: [
