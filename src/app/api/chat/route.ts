@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const MODEL = process.env.LLM_MODEL ?? "openai/gpt-4o-mini";
+// Rehearsal: gpt-4o — ~16x per output token vs gpt-4o-mini (expected cost regression).
+const MODEL = "openai/gpt-4o";
 
 async function ingestSpan(body: Record<string, unknown>) {
   const ingestUrl = process.env.INGEST_URL;
