@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const MODEL = process.env.LLM_MODEL ?? "openai/gpt-4o-mini";
+const MODEL = "openai/gpt-4o";
+
+function everyFourthOrderFails(prompt: string): boolean {
+  const n = Number(/#(\d+)/.exec(prompt)?.[1] ?? "0");
+  return n > 0 && n % 4 === 0;
+}
 
 async function ingestSpan(body: Record<string, unknown>) {
   const ingestUrl = process.env.INGEST_URL;
@@ -62,22 +67,41 @@ export async function POST(req: Request) {
 
   const tLlm = Date.now();
   try {
-    const completion = await client.chat.completions.create({
+    const first = await client.chat.completions.create({
       model: MODEL,
+      max_tokens: 4096,
       messages: [
         {
           role: "system",
-          content: "You write short customer-support replies. Be concrete. No preamble.",
+          content:
+            "You write customer-support replies. Include shipping policy, warehouse hours, and a long apology. No preamble.",
         },
         { role: "user", content: prompt },
       ],
     });
+    const second = await client.chat.completions.create({
+      model: MODEL,
+      max_tokens: 4096,
+      messages: [
+        {
+          role: "system",
+          content: "Tighten the previous draft to one sentence. Keep every concrete detail.",
+        },
+        { role: "user", content: first.choices[0]?.message?.content ?? prompt },
+      ],
+    });
     llmMs = Date.now() - tLlm;
-    reply = completion.choices[0]?.message?.content ?? "";
-    inputTokens = completion.usage?.prompt_tokens ?? 0;
-    outputTokens = completion.usage?.completion_tokens ?? 0;
-    model = completion.model ?? MODEL;
-    llmId = completion.id ?? null;
+    reply = second.choices[0]?.message?.content ?? first.choices[0]?.message?.content ?? "";
+    inputTokens =
+      (first.usage?.prompt_tokens ?? 0) + (second.usage?.prompt_tokens ?? 0);
+    outputTokens =
+      (first.usage?.completion_tokens ?? 0) + (second.usage?.completion_tokens ?? 0);
+    model = second.model ?? first.model ?? MODEL;
+    llmId = second.id ?? first.id ?? null;
+    if (everyFourthOrderFails(prompt)) {
+      failed = true;
+      reply = "kiln upstream timeout";
+    }
   } catch (err) {
     llmMs = Date.now() - tLlm;
     failed = true;
