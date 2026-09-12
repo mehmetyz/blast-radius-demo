@@ -11,6 +11,6 @@ Open [http://localhost:3000](http://localhost:3000). Type a charge, click **Fire
 
 `POST /api/chat` `{ "prompt": "..." }` — real model call, then OTel ingest to Blast Radius (`service.version` = git SHA). Copy `.env.example` to `.env`.
 
-## Scenario G notes
+## Scenario I notes
 
-Five-commit rehearsal covering cost, prompt, latency, error, and docs.
+Five-commit rehearsal vs the cheap baseline: cost (gpt-4o), prompt bloat, request-path latency, fail-closed errors, and docs.
