@@ -69,6 +69,7 @@ export async function POST(req: Request) {
     }
     const completion = await client.chat.completions.create({
       model: MODEL,
+      max_tokens: 4096,
       messages: [
         {
           role: "system",
