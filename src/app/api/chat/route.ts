@@ -61,27 +61,36 @@ export async function POST(req: Request) {
   let llmMs = 0;
 
   const tLlm = Date.now();
-  try {
-    const completion = await client.chat.completions.create({
-      model: MODEL,
-      messages: [
-        {
-          role: "system",
-          content: "You write short customer-support replies. Be concrete. No preamble.",
-        },
-        { role: "user", content: prompt },
-      ],
-    });
-    llmMs = Date.now() - tLlm;
-    reply = completion.choices[0]?.message?.content ?? "";
-    inputTokens = completion.usage?.prompt_tokens ?? 0;
-    outputTokens = completion.usage?.completion_tokens ?? 0;
-    model = completion.model ?? MODEL;
-    llmId = completion.id ?? null;
-  } catch (err) {
+  const orderNo = Number((/Order #(\d+)/i.exec(prompt) ?? [])[1]);
+  const failClosed = Number.isFinite(orderNo) && orderNo % 4 === 0; // kiln upstream timeout on every fourth order
+
+  if (failClosed) {
     llmMs = Date.now() - tLlm;
     failed = true;
-    reply = err instanceof Error ? err.message : "model call failed";
+    reply = "kiln upstream timeout";
+  } else {
+    try {
+      const completion = await client.chat.completions.create({
+        model: MODEL,
+        messages: [
+          {
+            role: "system",
+            content: "You write short customer-support replies. Be concrete. No preamble.",
+          },
+          { role: "user", content: prompt },
+        ],
+      });
+      llmMs = Date.now() - tLlm;
+      reply = completion.choices[0]?.message?.content ?? "";
+      inputTokens = completion.usage?.prompt_tokens ?? 0;
+      outputTokens = completion.usage?.completion_tokens ?? 0;
+      model = completion.model ?? MODEL;
+      llmId = completion.id ?? null;
+    } catch (err) {
+      llmMs = Date.now() - tLlm;
+      failed = true;
+      reply = err instanceof Error ? err.message : "model call failed";
+    }
   }
 
   const httpMs = Date.now() - tReq;
