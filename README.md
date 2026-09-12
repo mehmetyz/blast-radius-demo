@@ -12,3 +12,5 @@ Open [http://localhost:3000](http://localhost:3000). Type a charge, click **Fire
 `POST /api/chat` `{ "prompt": "..." }` — real model call, then OTel ingest to Blast Radius (`service.version` = git SHA). Copy `.env.example` to `.env`.
 
 Production traffic is ingested live against the git SHA Vercel deployed.
+
+Kept after the error-spike rehearsal.
