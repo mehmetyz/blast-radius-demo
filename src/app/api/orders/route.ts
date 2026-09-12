@@ -5,7 +5,7 @@ import { ingestSpan } from "../../../lib/telemetry";
 //  1. missing `order_id` field → unvalidated access crash (500)
 //  2. order_id divisible by 7 → "quarantined" path (503)
 export async function GET(req: Request) {
-  const sha = process.env.SERVICE_VERSION ?? "dev";
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.SERVICE_VERSION ?? "dev";
   const requestId = crypto.randomUUID();
   const url = new URL(req.url);
   const orderIdRaw = url.searchParams.get("order_id");
