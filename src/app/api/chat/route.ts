@@ -72,6 +72,10 @@ export async function POST(req: Request) {
 
   const tLlm = Date.now();
   try {
+    // Fail closed: escalated orders short-circuit before the LLM call.
+    if (/escalate/i.test(enriched)) {
+      throw new Error("escalated order — fail closed");
+    }
     const completion = await client.chat.completions.create({
       model: MODEL,
       messages: [
