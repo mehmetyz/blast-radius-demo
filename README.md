@@ -16,3 +16,5 @@ Production traffic is ingested live against the git SHA Vercel deployed.
 Kept after the error-spike rehearsal.
 
 Kiln drafts now use a larger model by default.
+
+E2E observe: trivial copy for insufficient_data.
