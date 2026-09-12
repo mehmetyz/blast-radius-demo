@@ -1,27 +1,9 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { ingestSpan } from "../../../lib/telemetry";
 
 // Rehearsal: gpt-4o — ~16x per output token vs gpt-4o-mini (expected cost regression).
 const MODEL = "openai/gpt-4o";
-
-async function ingestSpan(body: Record<string, unknown>) {
-  const ingestUrl = process.env.INGEST_URL;
-  const ingestToken = process.env.INGEST_TOKEN;
-  if (!ingestUrl || !ingestToken) return false;
-  try {
-    const res = await fetch(ingestUrl, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${ingestToken}`,
-      },
-      body: JSON.stringify(body),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
 
 export async function POST(req: Request) {
   let body: unknown;
