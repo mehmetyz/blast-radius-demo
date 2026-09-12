@@ -107,7 +107,7 @@ export default function Kiln() {
             {reply}
           </p>
         ) : (
-          <p className="mt-3 text-sm text-ash">No firing yet. Write a charge and pull Fire.</p>
+          <p className="mt-3 text-sm text-ash">Hearth is empty. Write a charge and pull Fire.</p>
         )}
       </section>
     </main>
