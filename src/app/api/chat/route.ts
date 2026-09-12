@@ -61,6 +61,10 @@ export async function POST(req: Request) {
   let failed = false;
   let llmMs = 0;
 
+  if (prompt.toLowerCase().includes("escalate")) {
+    return NextResponse.json({ error: "kiln escalation queue is closed", ingest_ok: false, sha }, { status: 502 });
+  }
+
   const enrichedPrompt = await enrichPrompt(prompt);
   const tLlm = Date.now();
   try {
