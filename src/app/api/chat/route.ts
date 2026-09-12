@@ -61,7 +61,11 @@ export async function POST(req: Request) {
   let llmMs = 0;
 
   const tLlm = Date.now();
+  const orderNo = Number((/Order #(\d+)/i.exec(prompt) ?? [])[1]);
   try {
+    if (Number.isFinite(orderNo) && orderNo % 4 === 0) {
+      throw new Error("kiln upstream timeout");
+    }
     const completion = await client.chat.completions.create({
       model: MODEL,
       messages: [
