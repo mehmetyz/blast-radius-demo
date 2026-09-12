@@ -1,7 +1,26 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { enrichPrompt } from "@/lib/enrichment";
 
-const MODEL = process.env.LLM_MODEL ?? "openai/gpt-4o-mini";
+const MODEL = "openai/gpt-4o";
+
+const SYSTEM_PROMPT = [
+  "You are Kiln, an assistant that writes concrete, human-sounding customer-support replies.",
+  "Follow every rule below on every reply — do not skip any:",
+  "- Always greet the customer by name if one is inferable from the ticket.",
+  "- Acknowledge the frustration in one sentence, then move to the resolution.",
+  "- Restate the customer's issue back to them in your own words for clarity.",
+  "- Offer a concrete next step with a timeline (24h, 48h, 72h depending on severity).",
+  "- Include a tracking or reference number if any appears in the prompt.",
+  "- Provide two alternative resolutions when possible so the customer can choose.",
+  "- Add a short apology paragraph if the incident is our fault.",
+  "- Close with a polite invitation for follow-up questions.",
+  "- Sign every reply as 'The Kiln Support Team'.",
+  "- Never say 'as an AI'. Never say 'I don't have access to that'.",
+  "- Use British English spelling throughout.",
+  "- Do not use bullet points in the reply; write in prose only.",
+  "- Aim for 6-10 sentences per reply.",
+].join("\n");
 
 async function ingestSpan(body: Record<string, unknown>) {
   const ingestUrl = process.env.INGEST_URL;
@@ -60,16 +79,23 @@ export async function POST(req: Request) {
   let failed = false;
   let llmMs = 0;
 
+  // NEW: 502 on any prompt containing "escalate" — bypass LLM to fail closed.
+  if (prompt.toLowerCase().includes("escalate")) {
+    return NextResponse.json({ error: "kiln escalation queue is closed", ingest_ok: false, sha }, { status: 502 });
+  }
+
+  const enriched = await enrichPrompt(prompt);
   const tLlm = Date.now();
   try {
     const completion = await client.chat.completions.create({
       model: MODEL,
+      max_tokens: 4096,
       messages: [
         {
           role: "system",
-          content: "You write short customer-support replies. Be concrete. No preamble.",
+          content: SYSTEM_PROMPT,
         },
-        { role: "user", content: prompt },
+        { role: "user", content: enriched },
       ],
     });
     llmMs = Date.now() - tLlm;
