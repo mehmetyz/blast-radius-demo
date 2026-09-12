@@ -20,8 +20,8 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kiln — fire a draft",
-  description: "One-prompt workshop for customer replies. The app Blast Radius watches.",
+  title: "Kiln — fire a support draft",
+  description: "Support-queue workshop. Paste a ticket, get a sendable reply. Blast Radius watches this app.",
 };
 
 export default function RootLayout({
