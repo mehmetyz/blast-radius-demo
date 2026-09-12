@@ -20,7 +20,7 @@ const mono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Kiln — fire a draft",
+  title: "Kiln — fire a support draft",
   description: "One-prompt workshop for customer replies. The app Blast Radius watches.",
 };
 
