@@ -5,7 +5,7 @@ import { ingestSpan } from "../../../lib/telemetry";
 //  1. missing `order_id` field → unvalidated access crash (500)
 //  2. order_id divisible by 7 → "quarantined" path (503)
 export async function GET(req: Request) {
-  const sha = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.SERVICE_VERSION ?? "dev";
+  const sha = process.env.SERVICE_VERSION ?? "dev";
   const requestId = crypto.randomUUID();
   const url = new URL(req.url);
   const orderIdRaw = url.searchParams.get("order_id");
@@ -37,22 +37,6 @@ export async function GET(req: Request) {
   // Trigger 2: numeric pattern — every 7th order is quarantined.
   if (orderId % 7 === 0) {
     const message = `order ${orderId} is quarantined for review`;
-    await ingestSpan({
-      "service.version": sha,
-      kind: "http",
-      name: "GET /api/orders",
-      "http.route": "/api/orders",
-      latency_ms: Date.now() - t0,
-      error: 1,
-      error_message: message,
-      request_id: requestId,
-    });
-    return NextResponse.json({ error: message }, { status: 503 });
-  }
-
-  // Special handling for flagged accounts.
-  if (orderId % 13 === 0) {
-    const message = `payment hold: order ${orderId} needs review`;
     await ingestSpan({
       "service.version": sha,
       kind: "http",
