@@ -1,26 +1,9 @@
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
+import { ingestSpan } from "../../../lib/telemetry";
 
-const MODEL = process.env.LLM_MODEL ?? "openai/gpt-4o-mini";
-
-async function ingestSpan(body: Record<string, unknown>) {
-  const ingestUrl = process.env.INGEST_URL;
-  const ingestToken = process.env.INGEST_TOKEN;
-  if (!ingestUrl || !ingestToken) return false;
-  try {
-    const res = await fetch(ingestUrl, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${ingestToken}`,
-      },
-      body: JSON.stringify(body),
-    });
-    return res.ok;
-  } catch {
-    return false;
-  }
-}
+// Rehearsal: gpt-4o — ~16x per output token vs gpt-4o-mini (expected cost regression).
+const MODEL = "openai/gpt-4o";
 
 export async function POST(req: Request) {
   let body: unknown;
@@ -49,7 +32,7 @@ export async function POST(req: Request) {
     baseURL: process.env.OPENAI_BASE_URL || undefined,
   });
 
-  const sha = process.env.SERVICE_VERSION ?? "dev";
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.SERVICE_VERSION ?? "dev";
   const requestId = crypto.randomUUID();
   const tReq = Date.now();
   let reply = "";
@@ -62,12 +45,23 @@ export async function POST(req: Request) {
 
   const tLlm = Date.now();
   try {
+    // Fail closed: escalated prompts short-circuit before the LLM call.
+    if (/escalate/i.test(prompt)) {
+      throw new Error("escalated prompt — fail closed");
+    }
     const completion = await client.chat.completions.create({
       model: MODEL,
       messages: [
         {
           role: "system",
-          content: "You write short customer-support replies. Be concrete. No preamble.",
+          content: [
+            "You write short customer-support replies.",
+            "House style:",
+            "- one sentence, no preamble, no emoji",
+            "- concrete dates and numbers over vague promises",
+            "- warm but plain language",
+            "- when an order is flagged, say so plainly and point to billing",
+          ].join("\n"),
         },
         { role: "user", content: prompt },
       ],
